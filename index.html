@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Advisor Console</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="mock.css">
+  <style>
+    th{
+      border-bottom: none !important;
+      border-top: none !important;
+    }
+    tr{
+      border-bottom: solid !important;
+      border-color: rgb(230,230,230) !important;
+    }
+    
+    table {
+      border-collapse: collapse
+    }
+    
+    .table tr, .table tr td, .table tr th {
+      padding: 0pt;
+      margin: 0pt;
+    }
+    .side-table {
+      table-layout: fixed;
+      width: 100%;
+      
+    }
+    
+  </style>
+</head>
+
+<body>
+  <div class="page-title text-center">
+    <h1 style="color: #E8E8EE;"> Tutor Console</h1>
+  </div>  
+  
+  <div class="container my-4">
+    <div class="row">
+      <div class="col-md-6 my-2" style="display: flex">
+        <button id="pause" type="button" style="font-family: Segoe UI Symbol" class="btn rounded-0" disabled>&#x23F8;&#xfe0e;</button>
+        <label id="timer" class="mx-2 align-self-end ">Please Submit a File</label> 
+      </div>
+      
+      <div class="col-md-6 my-2" style="display: flex">
+        <input id="timescaleInput" type="range" min="1" max="1000" value=1 disabled></input> 
+        <label target="timescaleInput">&nbsp&nbsp&nbspTick speed </label>
+      </div>
+    </div>
+  </div>
+  
+  <div class="container my-4">
+    <div class="row my-2">
+      <label target="leftTable">Submissions</label> 
+      <div class="col-md-12 overflow-auto side-pane">
+        
+        <table id="leftTable" class="table side-table">
+          <caption></caption>
+          
+          <colgroup >
+            <col style="width: 5em">
+            <col style="width: 12em">
+            <col style="width: 6em">
+            <col style="width: 4em">
+            <col style="width: 6em">
+            <col style="width: 12em">
+            <col style="width: 5em">
+          </colgroup >
+          <thead >
+            <tr >
+              <th scope="col">Student</th>
+              <th scope="col">Time</th>
+              <th scope="col">Functions</th>
+              <th scope="col">Types</th>
+              <th scope="col">Comments</th>
+              <th scope="col">Error?</th>
+              <th scope="col">Link</th>
+            </tr>
+          </thead>
+          <tbody class="overflow-auto" ></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <label target="rightTable">Profiles</label> 
+      <div class="col-md-12 overflow-auto side-pane">
+        
+        <table id="rightTable" class="table side-table" >
+          <caption></caption>
+          <colgroup>
+            <col style="width: 5em">
+            <col style="width: 12em">
+            <col style="width: 12em">
+            <col style="width: 6em">
+            <col style="width: 4em">
+            <col style="width: 6em">
+            <col style="width: 4em">
+            <col style="width: 9em">
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" style="cursor:pointer" onclick="sortRightTable(0)">Student</th>
+              <th scope="col" style="cursor:pointer" onclick="sortRightTable(1)">Active Since</th>
+              <th scope="col" style="cursor:pointer" onclick="sortRightTable(2)">Last Active</th>
+              <th scope="col" style="cursor:pointer" onclick="sortRightTable(3)">Functions</th>
+              <th scope="col" style="cursor:pointer" onclick="sortRightTable(4)">Types</th>
+              <th scope="col" style="cursor:pointer" onclick="sortRightTable(5)">Comments</th>
+              <th scope="col" style="cursor:pointer" onclick="sortRightTable(6)">Errors</th>
+              <th scope="col" style="cursor:pointer" onclick="sortRightTable(7)">Submissions</th>   
+              
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <div class="container my-4">
+    <div class="row px-2">
+      <form id="csvForm">
+        <input class="my-2" type="file" id="csvFile" accept=".csv" /> <input type="submit" value="Submit" id="csvSubmit"/>
+      </form>
+    </div>
+  </div>
+
+  <footer style="height: 40px; background-color: #990033;"></footer>
+</body>
+
+<script>
+  const csvForm = document.getElementById("csvForm");
+  const csvFile = document.getElementById("csvFile");
+  const timer = document.getElementById("timer");
+  const pauseButton = document.getElementById("pause");
+  const timescaleInput = document.getElementById("timescaleInput");
+  const leftTable = document.getElementById("leftTable");
+  const rightTable = document.getElementById("rightTable");
+  const r_startTime = 159050071581;
+  
+  let tickSchedule;
+  let data;
+  let timescale = 1;
+  
+  
+  
+  let tempButtonPaused = false;
+  pauseButton.addEventListener("click", function(e){
+    
+    toggleSimulationPaused();
+  });
+  
+  function isSimulationPaused() {
+    return (tempButtonPaused)
+  }
+  
+  function toggleSimulationPaused() {
+    if (isSimulationPaused()) {
+      pauseButton.innerHTML = "&#x23F8;&#xfe0e;";
+    } else {
+      pauseButton.innerHTML = "&#x23F5;&#xfe0e;";
+    }
+    tempButtonPaused = ! tempButtonPaused
+  }
+  
+  timescaleInput.addEventListener("change", function(e){
+    let val = Number(timescaleInput.value);
+    if (! isNaN(val) && val > 0) {
+      updateTimescale(val);
+    }
+  });
+  
+  function updateTimescale(num) {
+    clearInterval(tickSchedule);
+    timescale = num;
+    tickSchedule = setInterval(tick, 1000 / timescale, data);
+  }
+  
+  csvForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    
+    timescaleInput.disabled = false;
+    pauseButton.disabled = false
+    csvForm.childNodes.forEach(elem => elem.disabled = true);
+    
+    const input = csvFile.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function (e) {
+      const text = e.target.result;
+      data = csvToArray(text);
+      updateDisplayTimer("Timer Ready");
+      tickSchedule = setInterval(tick, 1000 / timescale, data);
+    };
+    reader.readAsText(input);
+  });
+  
+  function csvToArray(str) {
+    const headers = str.slice(0, str.indexOf("\n")).split(",");
+    const rows = str.slice(str.indexOf("\n") + 1).split("\n");
+    return rows
+  }
+  
+  function Submission (r_row) {
+    let row = r_row.trim().split(",");
+    this.id = row[2];
+    this.timestamp = toMillisecond(Number(row[3]));
+    this.nFunctions = Number(row[4]);
+    this.nTypes = Number(row[5]);
+    this.nComments = Number(row[6]);
+    this.error = row[7];
+    this.toString = function() {
+      return this.id + ", "
+      +  this.getTime()  + ", "
+      +  this.nFunctions  + ", "
+      +  this.nTypes  + ", "
+      +  this.nComments  + ", "
+      +  this.timestamp  + ", "
+      +  this.error;
+    }
+    this.getTime = function() {
+      return timestampToString(this.timestamp);
+    }
+    this.getError = function() {
+      if (this.error === "\"\"") {
+        return "";
+      } else {
+        return this.error;
+      }
+    }
+  }
+  
+  var admitSubmission = (function() {
+    let currIndex = 0;
+    
+    return function(data, time) {
+      let currentRecord = new Submission(data[currIndex])
+      let currTimestamp = currentRecord.timestamp;
+      let result = null;
+      
+      if (time > currTimestamp) {
+        let oldRecord = currentRecord;
+        currIndex = currIndex + 1;
+        currentRecord = new Submission(data[currIndex])
+        currTimestamp = currentRecord.timestamp;
+        result = oldRecord;
+      }
+      return result;
+    }
+  })();
+  
+  var tick = (function() {
+    var currTime = toMillisecond(r_startTime);
+    return function(data) {
+      if (isSimulationPaused()) {
+        return;
+      }
+      currTime =  currTime + 60000; // one minute emapses
+      updateDisplayTimer(timestampToString(currTime));
+      let newSubmission = admitSubmission(data, currTime);
+      if (newSubmission === null) {} else {
+        updateLeftTable(newSubmission);
+        updateRightTable(newSubmission);
+      };
+    };
+  })();
+  
+  function updateLeftTable(submission) {
+    let row = leftTable.insertRow(1);
+    let cellID = row.insertCell(0);
+    cellID.innerHTML = submission.id
+    let cellTime = row.insertCell(1);
+    cellTime.innerHTML = submission.getTime();
+    let cellFunctions = row.insertCell(2);
+    cellFunctions.innerHTML = submission.nFunctions;
+    let cellTypes = row.insertCell(3);
+    cellTypes.innerHTML = submission.nTypes;
+    let cellComments = row.insertCell(4);
+    cellComments.innerHTML = submission.nComments;
+    let cellError = row.insertCell(5);
+    let errmsg = submission.getError();
+    cellError.innerHTML = errmsg;
+    
+    if (errmsg == "") {
+      row.style.backgroundColor = "rgb(" + [226,239,217].join(",") + ")";
+    } else {
+      row.style.backgroundColor = "rgb(" + [251,218,213].join(",") + ")";
+    }
+    
+    let cellLink = row.insertCell(6);
+    cellLink.innerHTML = "<a href=\"http://www.cas.mcmaster.ca/~anand/MentorHelpExample.png\" target=_blank>code ..</a>"
+  }
+  
+  function updateDisplayTimer(str) {
+    timer.innerHTML = str;
+  }
+  
+  // Keep a list of records
+  // For each active student, maintain the following records:
+  var updateRightTable = (function() {
+    let activeProfiles = new ProfileSet();
+    return function (submission) {
+      if (! activeProfiles.contains(submission.id)) {
+        newProfile = new Profile (submission);
+        activeProfiles.add(newProfile);
+        addProfile(newProfile);
+      } else {
+        oldProfile = activeProfiles.get(submission.id);
+        oldProfile.addSubmission(submission);
+        modifyProfile(oldProfile);
+      }
+    };
+  })();
+  
+  function Profile (submission) {
+    this.id = submission.id;
+    this.activeSince = submission.timestamp;
+    this.lastSubmission = submission.timestamp;
+    this.nFunctions = submission.nFunctions;
+    this.nTypes = submission.nTypes;
+    this.nComments = submission.nComments;
+    this.nErrors = (submission.error === "\"\"") ? 0 : 1;
+    this.nSubmissions = 1;
+    
+    this.toString = function() {
+      return this.id + ", first sub.:"
+      + this.getActiveSince() + ", last sub.:"
+      + this.getLastSubmission() + ", # funs:"
+      + this.nFunctions + ", # types:"
+      + this.nTypes + ", # comm:"
+      + this.nComments + ", # err:"
+      + this.nErrors + ", # subs:"
+      + this.nSubmissions;
+    }
+    
+    this.getActiveSince = function() {
+      return timestampToString(this.activeSince);
+    }
+    
+    this.getLastSubmission = function() {
+      return timestampToString(this.lastSubmission);
+    }
+    
+    this.addSubmission = function (submission) {
+      this.lastSubmission = Math.max(this.lastSubmission, submission.timestamp);
+      this.nFunctions = this.nFunctions + submission.nFunctions;
+      this.nTypes = this.nTypes + submission.nTypes;
+      this.nComments = this.nComments + submission.nComments;
+      this.nErrors = this.nErrors + ((submission.error === "\"\"") ? 0 : 1);
+      this.nSubmissions = this.nSubmissions + 1;
+      return this;
+    };
+  };
+  
+  function ProfileSet() {
+    this.profiles = new Array();
+    this.add = function (profile) {
+      this.profiles.push(profile);
+    }
+    this.indexOf = function (id) {
+      for (const i in this.profiles) {
+        if (this.profiles[i].id == id) {
+          return i;
+        };
+      };
+      return -1;
+    };
+    this.contains = function (profile) {
+      
+      return (this.indexOf(profile) !== -1);
+    };
+    this.get = function (profile) {
+      return this.profiles[this.indexOf(profile)]
+    }
+  };
+  
+  function addProfile (profile) {
+    let row = rightTable.insertRow(1);
+    let cellID = row.insertCell(0);
+    cellID.innerHTML = profile.id
+    let cellActiveSince = row.insertCell(1);
+    cellActiveSince.innerHTML = profile.getActiveSince();
+    let cellLastActive = row.insertCell(2);
+    cellLastActive.innerHTML = profile.getLastSubmission();
+    let cellFunctions = row.insertCell(3);
+    cellFunctions.innerHTML = profile.nFunctions
+    let cellTypes = row.insertCell(4);
+    cellTypes.innerHTML = profile.nTypes;
+    let cellComments = row.insertCell(5);
+    cellComments.innerHTML = profile.nComments;
+    let cellErrors = row.insertCell(6);
+    cellErrors.innerHTML = profile.nErrors;
+    let cellSubmissions = row.insertCell(7);
+    cellSubmissions.innerHTML = profile.nSubmissions;
+  };
+  
+  function removeProfile (profile) {
+    rightTable.removeChild(findProfileByID(profile.id));
+  };
+  
+  function modifyProfile (profile) {
+    let row = findProfileByID(profile.id);
+    row.cells[0].innerHTML = profile.id
+    row.cells[1].innerHTML = profile.getActiveSince();
+    row.cells[2].innerHTML = profile.getLastSubmission();
+    row.cells[3].innerHTML = profile.nFunctions
+    row.cells[4].innerHTML = profile.nTypes;
+    row.cells[5].innerHTML = profile.nComments;
+    row.cells[6].innerHTML = profile.nErrors;
+    row.cells[7].innerHTML = profile.nSubmissions;
+    
+    let redhue = 1 - profile.nErrors / 2 / profile.nSubmissions;
+    row.style.backgroundColor = "hsl(0, 100%, " + parseInt(redhue*100).toString()+"%)";
+  };
+  
+  function findProfileByID (id) {
+    for (const row of rightTable.rows) {
+      if (row.cells[0].innerHTML == id) {  
+        console.log("found")
+        return row;
+      }
+    }
+    console.log("not found")
+    return null;
+  };
+
+  function toMillisecond(timestamp) {
+    return Math.floor(timestamp * 10)
+  }
+  
+  function timestampToString(timestamp) {        
+    let date = new Date(timestamp)
+    return date.toLocaleString("en-CA");
+  }
+  
+  function sortRightTable(index) {
+    /* If the pause button is already disabled - do nothing
+    either another sort is in progress,
+    or the form has not yet been submitted*/
+    if (pauseButton.disabled == true) {
+      return;
+    }
+    
+    /* If the simultation is not paused, pause it,
+    then attempt ot */
+    let resume = false;
+    if (!isSimulationPaused()) {
+      toggleSimulationPaused();
+      resume = true;
+    }
+    pauseButton.disabled = true;
+    
+    var table, rows, switching, i, x, y, shouldSwitch;
+    table = rightTable;
+    switching = true;
+    while (switching) {
+      switching = false;
+      rows = table.rows;
+      for (i = 1; i < (rows.length - 1); i++) {
+        shouldSwitch = false;
+        x = rows[i].cells[index];
+        y = rows[i + 1].cells[index];
+        
+        let xtext = x.innerHTML.toLowerCase()
+        let ytext = y.innerHTML.toLowerCase()
+        let xnum = Number(xtext);
+        let ynum = Number(ytext);
+        
+        if (!isNaN(xnum) & !isNaN(ynum)) {
+          if (xnum < ynum) {
+            shouldSwitch = true;
+            break;
+          }
+        } else {
+          if (xtext < ytext) {
+            shouldSwitch = true;
+            break;
+          }
+        }
+      }
+      if (shouldSwitch) {
+        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+        switching = true;
+      }
+      
+      if (resume & isSimulationPaused()) {
+        toggleSimulationPaused();
+      }
+      pauseButton.disabled = false;
+    }
+  }
+</script>
+</html>

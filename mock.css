@@ -1,0 +1,87 @@
+.page-title {
+  background-color: #990033;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.page-heading {
+  color: #E8E8EE;
+}
+
+label {
+  font-weight: 400 !important;
+}
+
+.font-symbol {
+  font-family: Segoe UI Symbol;
+}
+
+
+.overflow-auto {
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.student-thumbnail {
+  object-fit: none;
+  object-position: center;
+  width: 200px;
+  max-height: 200px;
+  margin-bottom: 1rem;
+}
+
+.btn-column-major {
+  width: 300px;
+  margin: auto;
+  display: block;
+  appearance: auto;
+  border-width: 1px;
+  border-color: black;
+}
+
+.btn {
+  border-width: 1px;
+  border-color: black;
+  background-color: #F5F5F5;
+  outline: 0 !important;
+}
+
+.btn:hover {
+  border-width: 1px;
+  background-color: #E5E5E5;
+}
+
+.form-select {
+  outline: 0 !important;
+}
+
+.side-pane {
+  height: 11em;
+  width: 100%;
+  border-style: solid;
+  border-radius: 5px;
+  border-color: rgb(230,230,230);
+  margin: 4px 5px; 
+  resize: vertical;
+}
+
+footer {
+  height: 40px;
+  background-color: #990033;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  color: white;
+  text-align: center;
+}
+
+.scrollable-table {
+  overflow: auto;
+  height: 100px;
+}
+
+.scrollable-table thead th {
+  position: sticky; 
+  top: 0; 
+  z-index: 1;
+}
