@@ -92,23 +92,23 @@
                     <caption></caption>
                     <colgroup>
                         <col style="width: 5em">
-                        <col style="width: 12em">
-                        <col style="width: 12em">
+                        <col style="width: 10em">
+                        <col style="width: 10em">
                         <col style="width: 6em">
                         <col style="width: 4em">
                         <col style="width: 6em">
                         <col style="width: 4em">
-                        <col style="width: 9em">
+                        <col style="width: 7em">
                     </colgroup>
                     <thead>
                         <tr>
                             <th scope="col" style="cursor:pointer" onclick="sortRightTable(0)">Student</th>
                             <th scope="col" style="cursor:pointer" onclick="sortRightTable(1)">Active Since</th>
                             <th scope="col" style="cursor:pointer" onclick="sortRightTable(2)">Last Active</th>
-                            <th scope="col" style="cursor:pointer" onclick="sortRightTable(3)">Functions</th>
-                            <th scope="col" style="cursor:pointer" onclick="sortRightTable(4)">Types</th>
-                            <th scope="col" style="cursor:pointer" onclick="sortRightTable(5)">Comments</th>
-                            <th scope="col" style="cursor:pointer" onclick="sortRightTable(6)">Errors</th>
+                            <th scope="col" style="cursor:pointer" onclick="sortRightTable(3)">av. Functions</th>
+                            <th scope="col" style="cursor:pointer" onclick="sortRightTable(4)">av. Types</th>
+                            <th scope="col" style="cursor:pointer" onclick="sortRightTable(5)">av. Comments</th>
+                            <th scope="col" style="cursor:pointer" onclick="sortRightTable(6)">av. Errors</th>
                             <th scope="col" style="cursor:pointer" onclick="sortRightTable(7)">Submissions</th>   
                             
                         </tr>
@@ -418,10 +418,10 @@
         row.cells[0].innerHTML = profile.id
         row.cells[1].innerHTML = profile.getActiveSince();
         row.cells[2].innerHTML = profile.getLastSubmission();
-        row.cells[3].innerHTML = profile.nFunctions
-        row.cells[4].innerHTML = profile.nTypes;
-        row.cells[5].innerHTML = profile.nComments;
-        row.cells[6].innerHTML = profile.nErrors;
+        row.cells[3].innerHTML = parseFloat((profile.nFunctions / profile.nSubmissions).toFixed(2));
+        row.cells[4].innerHTML = parseFloat((profile.nTypes / profile.nSubmissions).toFixed(2));
+        row.cells[5].innerHTML = parseFloat((profile.nComments / profile.nSubmissions).toFixed(2));
+        row.cells[6].innerHTML = parseFloat((profile.nErrors / profile.nSubmissions).toFixed(2));
         row.cells[7].innerHTML = profile.nSubmissions;
         
         let redhue = 1 - profile.nErrors / 2 / profile.nSubmissions;
